@@ -100,7 +100,6 @@ extension RswiftGenerateInternalResources: XcodeBuildToolPlugin {
                     "generate", rswiftPath.string,
                     "--input-type", "input-files",
                     "--bundle-source", "finder",
-                    "--rswiftignore", context.pluginWorkDirectory.appending(subpath: ".rswiftignore").string,
                 ] + inputFilesArguments,
                 outputFiles: [rswiftPath]
             ),
