@@ -65,17 +65,43 @@ extension RswiftGenerateInternalResources: XcodeBuildToolPlugin {
         } else {
             description = target.displayName
         }
+        
+        let ignoredXibs = [
+            "CommunityBookmarkCell.xib",
+            "RecommendedProductHeadingArticleCell.xib",
+            "CommunityTopicCreationHeader.xib",
+            "Modules/Ads/",
+            "Modules/Debug/",
+            "Modules/GuestMode/",
+            "Modules/HealingMode/",
+            "Modules/Journal/",
+            "Modules/SublandingArticle/",
+            "Modules/VideoCarousel/"
+        ]
+        
+        let sourceFiles = target.inputFiles
+            .filter { $0.type == .resource || $0.type == .unknown }
+            .map(\.path.string)
+            .filter { path in
+                let isIgnored = ignoredXibs.contains(where: path.contains)
+                let isLottiePNG = path.contains("Resources/LottieAnimations/") && path.hasSuffix(".png")
+                
+                return !(isIgnored || isLottiePNG)
+            }
 
+        let inputFilesArguments = sourceFiles
+            .flatMap { ["--input-files", $0 ] }
+        
         return [
             .buildCommand(
                 displayName: "R.swift generate resources for \(description)",
                 executable: try context.tool(named: "rswift").path,
                 arguments: [
                     "generate", rswiftPath.string,
-                    "--target", target.displayName,
-                    "--input-type", "xcodeproj",
+                    "--input-type", "input-files",
                     "--bundle-source", "finder",
-                ],
+                    "--rswiftignore", context.pluginWorkDirectory.appending(subpath: ".rswiftignore").string,
+                ] + inputFilesArguments,
                 outputFiles: [rswiftPath]
             ),
         ]
